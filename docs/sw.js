@@ -1,5 +1,5 @@
 // Keeps the app usable offline: serve the cached shell, refresh it in the background.
-const CACHE = "libreta-serie-v1";
+const CACHE = "libreta-serie-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-512.png"];
 
 self.addEventListener("install", (e) => {
