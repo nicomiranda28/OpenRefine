@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Libreta de Serie</title>
+<meta name="theme-color" content="#1F49E0">
+<meta name="description" content="Dicta ideas entre series y revísalas en casa.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone column; a big mic "plate" up top for the gym, the inbox below for home. */
+:root {
+  --bg: #EEF0EC; --surface: #FFFFFF; --ink: #18212B; --muted: #5D6873; --line: #D5DAD3;
+  --accent: #1F49E0; --accent-ink: #FFFFFF; --rec: #E0432B; --ok: #1E8A55;
+  --font-display: "Archivo", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Roboto Mono", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #12171D; --surface: #1B222A; --ink: #E8ECE6; --muted: #98A3AD; --line: #2C3540;
+  --accent: #6F8CFF; --accent-ink: #0E1320; --rec: #FF6A52; --ok: #4CC488; color-scheme: dark } }
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--ink); margin: 0; }
+body { font-family: var(--font-body); font-size: 15px; line-height: 1.5; -webkit-tap-highlight-color: transparent; }
+.wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-stretch: 70%; font-weight: 900; font-size: 32px; line-height: 1; margin: 0; text-transform: uppercase; }
+h2 { font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 20px; text-transform: uppercase; margin: 0; letter-spacing: .02em; }
+.sub, .note { color: var(--muted); font-size: 13px; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.microw { display: flex; align-items: center; gap: 18px; }
+.mic { flex: none; width: 120px; height: 120px; border-radius: 50%; border: none; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; position: relative; transition: transform .12s, background .2s; }
+.mic:active { transform: scale(.96); }
+.mic svg { width: 46px; height: 46px; }
+.mic::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 2px solid currentColor; opacity: .35; }
+.mic.live { background: var(--rec); }
+.mic.live::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 3px solid var(--rec); animation: pulse 1.4s ease-out infinite; }
+@keyframes pulse { from { transform: scale(.9); opacity: .9 } to { transform: scale(1.25); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .mic.live::after { animation: none; opacity: .5 } }
+.micinfo { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.status { font-family: var(--font-display); font-stretch: 80%; font-weight: 800; font-size: 22px; line-height: 1.1; text-transform: uppercase; }
+.hint { color: var(--muted); font-size: 13px; }
+textarea { width: 100%; min-height: 96px; resize: vertical; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); color: var(--ink); font: inherit; font-size: 16px; }
+.partial { color: var(--muted); font-style: italic; min-height: 1.5em; font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.count { font-family: var(--font-mono); font-size: 11px; opacity: .7; }
+.actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.primary { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 12px 18px; font-weight: 600; }
+.primary:disabled { opacity: .4; cursor: default; }
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 13px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.detected { font-size: 13px; color: var(--muted); }
+.detected b { color: var(--ink); }
+.inbox { display: flex; flex-direction: column; gap: 14px; }
+.inboxhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: none; background: transparent; padding: 7px 12px; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.idea.done { opacity: .6; }
+.idea-top { display: flex; align-items: center; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+.proj { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.proj select { font: inherit; text-transform: uppercase; letter-spacing: .06em; border: none; background: transparent; color: var(--ink); padding: 2px 0; }
+.meta { display: inline-flex; gap: 8px; align-items: center; }
+.time { font-family: var(--font-mono); font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.badge { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--ok); border: 1px solid currentColor; border-radius: 6px; padding: 1px 6px; }
+.idea p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.idea-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.idea-actions button, .pm-row .btns button { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 6px 10px; font-size: 12px; }
+.danger { color: var(--rec) !important; }
+.empty { border: 1px dashed var(--line); border-radius: 14px; padding: 22px; color: var(--muted); text-align: center; }
+.pm { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.pm-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pm-list { display: flex; flex-direction: column; gap: 10px; }
+.pm-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.pm-row input, .newproj input { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; }
+.pm-row input.name { font-weight: 600; }
+.pm-row .btns { display: flex; gap: 6px; }
+.pm-row .btns button:disabled { opacity: .4; }
+.newproj { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); flex: none; padding: 0; }
+.send { display: flex; flex-direction: column; gap: 10px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg);
+  border-radius: 12px; padding: 12px 16px; display: flex; gap: 14px; align-items: center; max-width: calc(100% - 32px); box-shadow: 0 8px 24px rgba(0,0,0,.25); z-index: 20; font-size: 14px; }
+.toast button { background: transparent; border: none; color: var(--bg); font-weight: 700; text-decoration: underline; padding: 0; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>Libreta de Serie</h1><div class="sub">Habla entre series. Revisa en casa.</div></div>
+    <button class="ghost" id="install" type="button" hidden>Instalar app</button>
+  </header>
+
+  <section class="card" aria-label="Capturar idea">
+    <div class="microw">
+      <button class="mic" id="mic" type="button" aria-label="Empezar a grabar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></svg>
+      </button>
+      <div class="micinfo">
+        <div class="status" id="status">Toca y habla</div>
+        <div class="hint" id="hint">Di el proyecto y la idea. Ej: “En Crowders, encuestas targeteadas con nombre para cada target”.</div>
+      </div>
+    </div>
+    <div class="partial" id="partial" aria-live="polite"></div>
+    <textarea id="draft" placeholder="Tu idea aparece acá mientras hablas. También puedes escribirla."></textarea>
+    <div>
+      <div class="label" style="margin-bottom:8px">Proyecto</div>
+      <div class="chips" id="target"></div>
+      <div class="detected" id="detected" style="margin-top:8px"></div>
+    </div>
+    <div class="actions">
+      <label class="toggle"><input type="checkbox" id="autosave" checked> Guardar al terminar de hablar</label>
+      <button class="primary" id="save" type="button" disabled>Guardar idea</button>
+    </div>
+  </section>
+
+  <section class="inbox" aria-label="Ideas guardadas">
+    <div class="inboxhead">
+      <h2>Ideas</h2>
+      <div class="seg" role="group" aria-label="Estado">
+        <button type="button" data-st="unsent" aria-pressed="true">Sin enviar</button>
+        <button type="button" data-st="all" aria-pressed="false">Todas</button>
+      </div>
+    </div>
+    <div class="chips" id="filter"></div>
+
+    <div class="pm" id="pm" hidden>
+      <div class="pm-head"><h2 style="font-size:17px">Proyectos</h2><button class="ghost" id="pm-close" type="button">Listo</button></div>
+      <div class="note">Cambia el nombre o las palabras clave y toca Guardar. Toca el círculo para cambiar el color. Las palabras clave sirven para reconocer el proyecto cuando hablas.</div>
+      <div class="pm-list" id="pm-list"></div>
+      <div class="label">Nuevo proyecto</div>
+      <div class="newproj">
+        <input id="np-name" placeholder="Nombre del proyecto">
+        <input id="np-alias" placeholder="Palabras clave (separadas por coma)">
+        <button class="primary" id="np-add" type="button">Crear</button>
+      </div>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="card send">
+      <h2 style="font-size:17px">Pasar a Claude</h2>
+      <div class="note">Copia las ideas sin enviar y pégalas en tu conversación con Claude. Claude las ordena y las guarda en tu libreta.</div>
+      <div class="actions">
+        <button class="primary" id="copy" type="button">Copiar ideas sin enviar</button>
+        <button class="ghost" id="markSent" type="button" hidden>Marcar como enviadas</button>
+      </div>
+      <div class="note" id="copynote"></div>
+      <div class="actions"><button class="ghost" id="backup" type="button">Descargar respaldo</button></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const PALETTE = ["#1F49E0", "#0E8C8C", "#C98A12", "#9A3FD1", "#D2483A", "#3E7D2E", "#6B7280"];
+const KEY = "libreta-serie-v1";
+const DEFAULT_PROJECTS = [
+  { id: "crowders", name: "Crowders", aliases: ["crowders", "crowder", "encuestas"], color: "#1F49E0" },
+  { id: "oceano", name: "Juego oceánico", aliases: ["océano", "oceano", "oceánico", "oceánica", "submarino", "buceo", "mar"], color: "#0E8C8C" },
+  { id: "cantonite", name: "Cantonite", aliases: ["cantonite", "cantonita"], color: "#C98A12" },
+  { id: "otras", name: "Otras ideas", aliases: [], color: "#6B7280" },
+];
+const $ = (id) => document.getElementById(id);
+
+/* ---------- storage ---------- */
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.projects)) return s; } catch (e) {}
+  return { projects: DEFAULT_PROJECTS.slice(), ideas: [] };
+}
+const data = load();
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(data)); }
+  catch (e) { toast("No se pudo guardar en el teléfono. Descarga un respaldo."); }
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+const ui = { target: "auto", filter: "all", status: "unsent", busy: false, copiedIds: [] };
+
+/* ---------- helpers ---------- */
+const projById = (id) => data.projects.find(p => p.id === id);
+const projName = (id) => projById(id)?.name || "Sin proyecto";
+const projColor = (id) => projById(id)?.color || "#6B7280";
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+function fmtTime(ms) {
+  const d = new Date(ms), now = new Date();
+  const hm = d.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (ms >= day) return "hoy " + hm;
+  if (ms >= day - 864e5) return "ayer " + hm;
+  return d.toLocaleDateString("es", { day: "numeric", month: "short" }) + " " + hm;
+}
+let toastTimer;
+function toast(msg, label, fn) {
+  const t = $("toast"); t.textContent = "";
+  t.append(Object.assign(document.createElement("span"), { textContent: msg }));
+  if (label) { const b = document.createElement("button"); b.textContent = label; b.onclick = () => { t.hidden = true; fn(); }; t.append(b); }
+  t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 6000);
+}
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v; else if (k.startsWith("on")) e[k] = v; else if (v != null) e.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+}
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+function guessProject(text) {
+  const t = " " + norm(text) + " ";
+  let best = null, score = 0;
+  for (const p of data.projects) {
+    const words = [p.name, ...(p.aliases || [])].map(w => norm(w).trim()).filter(Boolean);
+    const s = words.reduce((n, w) => n + (t.includes(w) ? w.length : 0), 0);
+    if (s > score) { score = s; best = p.id; }
+  }
+  return best;
+}
+const fallbackProject = () => projById("otras") ? "otras" : (data.projects[0]?.id || "");
+
+/* ---------- render ---------- */
+function renderTarget() {
+  const box = $("target"); box.textContent = "";
+  const mk = (id, name, color) => el("button", { type: "button", class: "chip", "aria-pressed": String(ui.target === id),
+    onclick: () => { ui.target = id; renderTarget(); renderDetected(); } }, color ? el("span", { class: "dot", style: "background:" + color }) : null, name);
+  box.append(mk("auto", "Detectar solo"));
+  data.projects.forEach(p => box.append(mk(p.id, p.name, p.color)));
+}
+function renderDetected() {
+  const d = $("detected"); d.textContent = "";
+  const txt = $("draft").value.trim();
+  if (ui.target !== "auto" || !txt) return;
+  const g = guessProject(txt);
+  d.append("Va a: ", el("b", {}, g ? projName(g) : projName(fallbackProject()) + " (no reconocí el proyecto)"));
+}
+function renderFilter() {
+  const box = $("filter"); box.textContent = "";
+  const n = (pid) => data.ideas.filter(i => (!pid || i.project === pid) && (ui.status === "all" || !i.sent)).length;
+  const mk = (id, name, color) => el("button", { type: "button", class: "chip", "aria-pressed": String(ui.filter === id),
+    onclick: () => { ui.filter = id; renderFilter(); renderList(); } },
+    color ? el("span", { class: "dot", style: "background:" + color }) : null, name, el("span", { class: "count" }, String(n(id === "all" ? null : id))));
+  box.append(mk("all", "Todos"));
+  data.projects.forEach(p => box.append(mk(p.id, p.name, p.color)));
+  box.append(el("button", { type: "button", class: "chip", onclick: () => { $("pm").hidden = !$("pm").hidden; renderProjects(true); } }, "✎ Editar proyectos"));
+}
+const visible = () => data.ideas.filter(i => (ui.filter === "all" || i.project === ui.filter) && (ui.status === "all" || !i.sent))
+  .sort((a, b) => b.createdAt - a.createdAt);
+function renderList() {
+  const list = $("list"); list.textContent = "";
+  const items = visible();
+  if (!items.length) {
+    list.append(el("div", { class: "empty" }, data.ideas.length ? "Nada sin enviar acá." : "Todavía no hay ideas. Toca el micrófono y di la primera."));
+    return;
+  }
+  for (const i of items) {
+    const sel = el("select", { "aria-label": "Mover a proyecto", onchange: (e) => { i.project = e.target.value; persist(); renderAll(); } });
+    if (!projById(i.project)) sel.append(el("option", { value: "", selected: "" }, "Sin proyecto"));
+    data.projects.forEach(p => { const o = el("option", { value: p.id }, p.name); if (p.id === i.project) o.selected = true; sel.append(o); });
+    const card = el("article", { class: "idea" + (i.sent ? " done" : "") },
+      el("div", { class: "idea-top" },
+        el("span", { class: "proj" }, el("span", { class: "dot", style: "background:" + projColor(i.project) }), sel),
+        el("span", { class: "meta" }, i.sent ? el("span", { class: "badge" }, "Enviada") : null, el("span", { class: "time" }, fmtTime(i.createdAt)))),
+      el("p", {}, i.text));
+    const del = el("button", { type: "button", class: "danger" }, "Borrar");
+    del.onclick = () => {
+      if (del.dataset.armed) {
+        const idx = data.ideas.indexOf(i); data.ideas.splice(idx, 1); persist(); renderAll();
+        toast("Idea borrada", "Deshacer", () => { data.ideas.push(i); persist(); renderAll(); });
+        return;
+      }
+      del.dataset.armed = "1"; del.textContent = "¿Seguro? Toca otra vez";
+      setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = "Borrar"; } }, 3000);
+    };
+    card.append(el("div", { class: "idea-actions" },
+      el("button", { type: "button", onclick: () => editIdea(card, i) }, "Editar"),
+      el("button", { type: "button", onclick: () => { i.sent = !i.sent; persist(); renderAll(); } }, i.sent ? "Marcar sin enviar" : "Marcar enviada"),
+      del));
+    list.append(card);
+  }
+}
+function editIdea(card, i) {
+  const ta = el("textarea", {}); ta.value = i.text;
+  card.textContent = "";
+  card.append(ta, el("div", { class: "idea-actions" },
+    el("button", { type: "button", class: "primary", onclick: () => { i.text = ta.value.trim() || i.text; persist(); renderList(); } }, "Guardar cambios"),
+    el("button", { type: "button", class: "ghost", onclick: renderList }, "Cancelar")));
+  ta.focus();
+}
+function renderProjects(force) {
+  const box = $("pm-list");
+  if ($("pm").hidden) return;
+  if (!force && box.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
+  box.textContent = "";
+  if (!data.projects.length) { box.append(el("div", { class: "note" }, "No tienes proyectos. Crea uno abajo.")); return; }
+  for (const p of data.projects) {
+    const name = el("input", { class: "name", value: p.name, "aria-label": "Nombre del proyecto" });
+    const alias = el("input", { value: (p.aliases || []).join(", "), placeholder: "Palabras clave", "aria-label": "Palabras clave" });
+    const save = el("button", { type: "button", disabled: "" }, "Guardar");
+    const dirty = () => { save.disabled = !name.value.trim() || (name.value.trim() === p.name && alias.value === (p.aliases || []).join(", ")); };
+    name.oninput = dirty; alias.oninput = dirty;
+    save.onclick = () => {
+      p.name = name.value.trim(); p.aliases = alias.value.split(",").map(s => s.trim()).filter(Boolean);
+      persist(); renderAll(); renderProjects(true); toast("Proyecto actualizado: " + p.name);
+    };
+    const sw = el("button", { type: "button", class: "swatch", style: "background:" + p.color, "aria-label": "Cambiar color" });
+    sw.onclick = () => { p.color = PALETTE[(PALETTE.indexOf(p.color) + 1) % PALETTE.length]; persist(); renderAll(); renderProjects(true); };
+    const n = data.ideas.filter(i => i.project === p.id).length;
+    const del = el("button", { type: "button", class: "danger" }, "Borrar");
+    del.onclick = () => {
+      if (del.dataset.armed) { deleteProject(p); return; }
+      del.dataset.armed = "1";
+      const dest = p.id !== "otras" && projById("otras") ? "pasan a Otras ideas" : "quedan sin proyecto";
+      del.textContent = n ? `¿Borrar? Sus ${n} ideas ${dest}` : "¿Seguro? Toca otra vez";
+      setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = "Borrar"; } }, 4000);
+    };
+    box.append(el("div", { class: "pm-row" }, sw, name, alias, el("div", { class: "btns" }, save, del)));
+  }
+}
+function deleteProject(p) {
+  const dest = p.id !== "otras" && projById("otras") ? "otras" : "";
+  const moved = data.ideas.filter(i => i.project === p.id);
+  const idx = data.projects.indexOf(p);
+  moved.forEach(i => i.project = dest);
+  data.projects.splice(idx, 1);
+  if (ui.target === p.id) ui.target = "auto";
+  if (ui.filter === p.id) ui.filter = "all";
+  persist(); renderAll(); renderProjects(true);
+  toast(`Proyecto “${p.name}” borrado`, "Deshacer", () => {
+    data.projects.splice(idx, 0, p); moved.forEach(i => i.project = p.id); persist(); renderAll(); renderProjects(true);
+  });
+}
+function updateSave() { $("save").disabled = ui.busy || !$("draft").value.trim(); }
+function renderAll() { renderTarget(); renderDetected(); renderFilter(); renderList(); renderProjects(); updateSave(); }
+
+/* ---------- save ---------- */
+function commit() {
+  const text = $("draft").value.trim();
+  if (!text) return;
+  const project = ui.target !== "auto" ? ui.target : (guessProject(text) || fallbackProject());
+  const idea = { id: uid(), text, project, createdAt: Date.now(), sent: false };
+  data.ideas.push(idea); persist();
+  $("draft").value = ""; $("partial").textContent = "";
+  renderAll();
+  setStatus("Guardada ✓", "Toca para la siguiente idea.");
+  toast("Guardada en " + projName(project), "Deshacer", () => {
+    data.ideas = data.ideas.filter(x => x.id !== idea.id); persist();
+    $("draft").value = text; renderAll();
+  });
+}
+
+/* ---------- voice (phone speech recognition) ---------- */
+function setStatus(s, h) { $("status").textContent = s; if (h !== undefined) $("hint").textContent = h; }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, want = false, wakeLock = null;
+const lang = (navigator.language || "").toLowerCase().startsWith("es") ? navigator.language : "es-ES";
+
+function appendFinal(text) {
+  const ta = $("draft"); text = text.trim(); if (!text) return;
+  ta.value = ta.value.trim() ? ta.value.trim() + " " + text : text.charAt(0).toUpperCase() + text.slice(1);
+  updateSave(); renderDetected();
+}
+function newRecognizer() {
+  const r = new SR();
+  r.lang = lang; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+  r.onresult = (e) => {
+    let interim = "";
+    for (let k = e.resultIndex; k < e.results.length; k++) {
+      const res = e.results[k];
+      if (res.isFinal) appendFinal(res[0].transcript); else interim += res[0].transcript;
+    }
+    $("partial").textContent = interim;
+  };
+  r.onerror = (e) => {
+    if (e.error === "no-speech" || e.error === "aborted") return;
+    want = false;
+    if (e.error === "not-allowed" || e.error === "service-not-allowed") setStatus("Micrófono bloqueado", "Permite el micrófono para esta app en los ajustes de Chrome.");
+    else if (e.error === "network") setStatus("Sin internet", "El dictado de Android necesita conexión. Escribe la idea o intenta otra vez.");
+    else setStatus("Intenta otra vez", "El micrófono falló (" + e.error + ").");
+  };
+  r.onend = () => {
+    $("partial").textContent = "";
+    if (want) { try { r.start(); return; } catch (err) { want = false; } }
+    live(false);
+    if ($("draft").value.trim()) {
+      if ($("autosave").checked) commit(); else setStatus("Listo", "Revisa el texto y toca Guardar idea.");
+    } else if ($("status").textContent === "Escuchando") setStatus("Toca y habla", "No escuché nada. Intenta de nuevo.");
+  };
+  return r;
+}
+function live(on) {
+  $("mic").classList.toggle("live", on);
+  $("mic").setAttribute("aria-label", on ? "Terminar de grabar" : "Empezar a grabar");
+  if (on) { setStatus("Escuchando", "Habla tranquilo. Toca otra vez cuando termines."); keepAwake(); }
+  else if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+async function keepAwake() { try { wakeLock = await navigator.wakeLock?.request("screen"); } catch (e) {} }
+function startRec() {
+  if (!SR) { $("draft").focus(); setStatus("Usa el teclado", "Este navegador no tiene dictado. Abre la app en Chrome, o usa el 🎤 del teclado."); return; }
+  rec = rec || newRecognizer();
+  want = true;
+  try { rec.start(); live(true); } catch (e) { /* already started */ }
+}
+function stopRec() { want = false; if (rec) { setStatus("Terminando…"); rec.stop(); } }
+$("mic").addEventListener("click", () => { if (want) stopRec(); else startRec(); });
+
+/* ---------- send to Claude ---------- */
+$("copy").addEventListener("click", async () => {
+  const items = data.ideas.filter(i => !i.sent).sort((a, b) => a.createdAt - b.createdAt);
+  if (!items.length) { $("copynote").textContent = "No hay ideas sin enviar."; return; }
+  const txt = "Ideas del gimnasio para guardar en mi Libreta de Serie:\n\n" +
+    items.map(i => `- [${projName(i.project)}] (${new Date(i.createdAt).toLocaleString("es", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}) ${i.text}`).join("\n");
+  ui.copiedIds = items.map(i => i.id);
+  try { await navigator.clipboard.writeText(txt); $("copynote").textContent = `${items.length} ideas copiadas. Pégalas en tu conversación con Claude.`; }
+  catch (e) { $("copynote").textContent = "No se pudo copiar automáticamente."; }
+  $("markSent").hidden = false;
+});
+$("markSent").addEventListener("click", () => {
+  data.ideas.forEach(i => { if (ui.copiedIds.includes(i.id)) i.sent = true; });
+  persist(); $("markSent").hidden = true; $("copynote").textContent = "Marcadas como enviadas."; renderAll();
+});
+$("backup").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = el("a", { href: URL.createObjectURL(blob), download: "libreta-serie-" + new Date().toISOString().slice(0, 10) + ".json" });
+  document.body.append(a); a.click(); a.remove();
+});
+
+/* ---------- misc wiring ---------- */
+$("draft").addEventListener("input", () => { updateSave(); renderDetected(); });
+$("save").addEventListener("click", commit);
+$("pm-close").addEventListener("click", () => { $("pm").hidden = true; });
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+  ui.status = b.dataset.st;
+  document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  renderFilter(); renderList();
+}));
+$("np-add").addEventListener("click", () => {
+  const name = $("np-name").value.trim(); if (!name) return;
+  let id = norm(name).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || uid();
+  if (projById(id)) id += "-" + uid().slice(-4);
+  data.projects.push({ id, name, aliases: $("np-alias").value.split(",").map(s => s.trim()).filter(Boolean), color: PALETTE[data.projects.length % PALETTE.length] });
+  persist(); $("np-name").value = ""; $("np-alias").value = ""; renderAll(); renderProjects(true); toast("Proyecto creado: " + name);
+});
+
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $("install").hidden = false; });
+$("install").addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("install").hidden = true; });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+renderAll();
+if (!SR) setStatus("Usa el teclado", "Este navegador no tiene dictado. Abre la app en Chrome, o usa el 🎤 del teclado.");
+if (new URLSearchParams(location.search).has("grabar") && SR) {
+  setStatus("Toca para grabar", "Toca el botón grande para empezar.");
+  try { startRec(); } catch (e) {}
+}
+</script>
+</body>
+</html>

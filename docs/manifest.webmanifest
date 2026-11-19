@@ -1,0 +1,20 @@
+{
+  "name": "Libreta de Serie",
+  "short_name": "Libreta",
+  "description": "Dicta ideas entre series y revísalas en casa.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF0EC",
+  "theme_color": "#1F49E0",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Grabar idea", "short_name": "Grabar", "url": "./?grabar=1", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
